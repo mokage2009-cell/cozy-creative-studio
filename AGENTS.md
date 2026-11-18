@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application structure
+- Keep the client-only 3D world at `/` with the existing town and local save formats to preserve imported gameplay.
+- Keep home walking and zone rules in plain TypeScript; the scene uses a waypoint path through the corridor, and studio editing depends on the avatar's actual zone.
+- Use `src/game/studio/motion.functions.ts` for AI motion assistance through the generated Gateway SDK contracts; do not restore unused legacy provider wrappers.
+- Keep the source VRM on Lovable Assets and load its committed pointer so model files do not inflate the repository.
+- Reuse `window.__home.state()` and `window.__home.sim(seconds)` in development to verify walking under software WebGL; these hooks are never available in production.
