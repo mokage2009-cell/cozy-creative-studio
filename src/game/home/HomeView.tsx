@@ -21,9 +21,9 @@ function CameraRig({zone,reset}: {zone:string;reset:number}) {
  useFrame((_,delta)=>{
   if(!moving.current||!controls.current)return;
   const studio=zone==='studio',mobile=size.width<600;
-  const pos=new Vector3(studio?6:12,studio?5:10,studio?-7:14);
-  const target=new Vector3(studio?(mobile?0:1.2):-.4,studio?(mobile?-.8:1):0,studio?-11:-1.8);
-  if(mobile)pos.sub(target).multiplyScalar(studio?1.18:1.3).add(target);
+   const pos=new Vector3(studio?3.4:12,studio?1.3:10,studio?-10:14);
+   const target=new Vector3(studio?0:-.4,studio?.9:0,studio?-10:-1.8);
+   if(mobile)pos.sub(target).multiplyScalar(studio?1.25:1.3).add(target);
   const alpha=1-Math.exp(-3*Math.min(delta,.05));camera.position.lerp(pos,alpha);controls.current.target.lerp(target,alpha);controls.current.update();
   if(camera.position.distanceTo(pos)<.03)moving.current=false;
  });
