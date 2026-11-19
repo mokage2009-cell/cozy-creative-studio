@@ -35,3 +35,4 @@ use the editor.
 - Use `src/game/studio/motion.functions.ts` for AI motion assistance through the generated Gateway SDK contracts; do not restore unused legacy provider wrappers.
 - Keep the source VRM on Lovable Assets and load its committed pointer so model files do not inflate the repository.
 - Reuse `window.__home.state()` and `window.__home.sim(seconds)` in development to verify walking under software WebGL; these hooks are never available in production.
+- Hide the studio's camera-facing entrance wall only while the avatar is in the studio and frame the stage clear of the editor; cutaway architecture keeps editing visible without changing walking rules.

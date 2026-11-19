@@ -21,9 +21,9 @@ function CameraRig({zone,reset}: {zone:string;reset:number}) {
  useFrame((_,delta)=>{
   if(!moving.current||!controls.current)return;
   const studio=zone==='studio',mobile=size.width<600;
-  const pos=new Vector3(studio?6:12,studio?5:10,studio?-4:14);
-  if(mobile)pos.multiplyScalar(studio?1.18:1.3);
-  const target=new Vector3(studio?0:-.4,studio?1:0,studio?-11:-1.8);
+  const pos=new Vector3(studio?6:12,studio?5:10,studio?-7:14);
+  const target=new Vector3(studio?(mobile?0:1.2):-.4,studio?(mobile?-.8:1):0,studio?-11:-1.8);
+  if(mobile)pos.sub(target).multiplyScalar(studio?1.18:1.3).add(target);
   const alpha=1-Math.exp(-3*Math.min(delta,.05));camera.position.lerp(pos,alpha);controls.current.target.lerp(target,alpha);controls.current.update();
   if(camera.position.distanceTo(pos)<.03)moving.current=false;
  });
@@ -55,7 +55,7 @@ export function HomeView(){
    <color attach="background" args={[colors['floor']]}/><ambientLight intensity={.8}/><hemisphereLight args={[colors['light'],colors['sage'],1]}/>
    <directionalLight castShadow position={[-4,9,3]} intensity={2} color={colors['light']} shadow-mapSize={[1024,1024]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={16} shadow-camera-bottom={-16} shadow-normalBias={.04}/>
    <Environment resolution={32}><Lightformer intensity={1.5} position={[0,6,0]} scale={[12,12,1]}/></Environment>
-   <RoomArchitecture onFloor={floor} onStudio={goStudio} onLiving={goLiving}/>
+   <RoomArchitecture onFloor={floor} onStudio={goStudio} onLiving={goLiving} studioActive={zone==='studio'}/>
    {items.filter(i=>i.placed).map(it=><group key={it.uid} position={[it.x,0,it.z]} rotation={[0,it.rotY,0]} onClick={e=>{e.stopPropagation();if(e.delta>6||readOnly)return;if(panel==='items')setSelected(it.uid);else setMenu(it.uid);}}><Furniture3D item={it} plantScale={s.plant.scale} selected={selected===it.uid}/></group>)}
    {menuItem&&<Html position={[menuItem.x,1.7,menuItem.z]} center zIndexRange={[25,0]}><div className="panel p-2 flex gap-2">{ACTIONS[menuItem.type].map(a=><Button key={a.id} size="sm" onClick={()=>{setMenu(null);run({targetUid:menuItem.uid,pose:a.pose,say:a.label});}}>{a.label}</Button>)}</div></Html>}
    <AvatarController cmd={cmd} items={items} config={avatar} motion={canEdit?motion:null} onZone={z=>{setZone(homeZone(z));if(z<-8)setPanel(null);}}/>

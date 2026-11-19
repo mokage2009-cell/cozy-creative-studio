@@ -5,14 +5,17 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
 
-export function scenePalette() {
+type SceneColor = 'wall'|'trim'|'wood'|'wood-line'|'sage'|'rose'|'sky'|'light'|'ink'|'floor'|'rug';
+export function scenePalette(): Record<SceneColor, string> {
  const css = getComputedStyle(document.documentElement);
- return Object.fromEntries(['wall','trim','wood','wood-line','sage','rose','sky','light','ink','floor','rug'].map(k=>[k,css.getPropertyValue(`--scene-${k}`).trim()]));
+  const color = (key: SceneColor) => css.getPropertyValue(`--scene-${key}`).trim();
+  return {wall:color('wall'),trim:color('trim'),wood:color('wood'),'wood-line':color('wood-line'),sage:color('sage'),rose:color('rose'),sky:color('sky'),light:color('light'),ink:color('ink'),floor:color('floor'),rug:color('rug')};
 }
+const FLOOR_SECTIONS: [number,number,number,number][] = [[0,0,12,10],[0,-6.5,2,3],[0,-11,8,6]];
 function Block({position,size,color}: {position:[number,number,number];size:[number,number,number];color:string}) {
  return <RoundedBox position={position} args={size} radius={0.025} smoothness={2} castShadow receiveShadow><meshToonMaterial color={color}/></RoundedBox>;
 }
-export function RoomArchitecture({onFloor,onStudio,onLiving}: {onFloor:(e:ThreeEvent<MouseEvent>)=>void;onStudio:()=>void;onLiving:()=>void}) {
+export function RoomArchitecture({onFloor,onStudio,onLiving,studioActive}: {onFloor:(e:ThreeEvent<MouseEvent>)=>void;onStudio:()=>void;onLiving:()=>void;studioActive:boolean}) {
  const p = useMemo(scenePalette,[]);
  const wood = useMemo(()=>{
   const c=document.createElement('canvas');c.width=512;c.height=512;const g=c.getContext('2d');if(!g)return null;
@@ -23,7 +26,7 @@ export function RoomArchitecture({onFloor,onStudio,onLiving}: {onFloor:(e:ThreeE
  },[p]);
  return <group>
   <mesh position={[0,-.12,0]} receiveShadow><boxGeometry args={[12,.24,10]}/><meshToonMaterial color={p['trim']}/></mesh>
-  {[[0,0,12,10],[0,-6.5,2,3],[0,-11,8,6]].map(([x,z,w,d],i)=><mesh key={i} rotation={[-Math.PI/2,0,0]} position={[x,.002,z]} onClick={onFloor} receiveShadow><planeGeometry args={[w,d]}/><meshToonMaterial map={wood} color={p['light']}/></mesh>)}
+  {FLOOR_SECTIONS.map(([x,z,w,d],i)=><mesh key={i} rotation={[-Math.PI/2,0,0]} position={[x,.002,z]} onClick={onFloor} receiveShadow><planeGeometry args={[w,d]}/><meshToonMaterial map={wood} color={p['light']}/></mesh>)}
   <Block position={[-3.55,1.6,-5]} size={[4.9,3.2,.16]} color={p['wall']}/><Block position={[3.55,1.6,-5]} size={[4.9,3.2,.16]} color={p['wall']}/>
   <Block position={[0,2.95,-5]} size={[2.2,.5,.2]} color={p['wall']}/>
   <Block position={[-6,1.6,0]} size={[.16,3.2,10]} color={p['wall']}/>
@@ -31,7 +34,7 @@ export function RoomArchitecture({onFloor,onStudio,onLiving}: {onFloor:(e:ThreeE
   <Block position={[0,2.68,-5]} size={[2.35,.13,.28]} color={p['trim']}/>
   {[-1.1,1.1].map(x=><Block key={x} position={[x,1.5,-6.5]} size={[.13,3,3]} color={p['sage']}/>)}
   <Block position={[0,1.6,-14]} size={[8,3.2,.16]} color={p['wall']}/><Block position={[-4,1.6,-11]} size={[.16,3.2,6]} color={p['sage']}/>
-  {[-2.6,2.6].map(x=><Block key={x} position={[x,1.6,-8]} size={[3,3.2,.13]} color={p['wall']}/>)}
+  {!studioActive&&[-2.6,2.6].map(x=><Block key={x} position={[x,1.6,-8]} size={[3,3.2,.13]} color={p['wall']}/>)}
   {/* Tall window and flowing curtains */}
   <Block position={[-3.8,1.9,-4.87]} size={[3.1,2.15,.13]} color={p['trim']}/>
   <mesh position={[-3.8,1.9,-4.77]}><planeGeometry args={[2.9,1.95]}/><meshBasicMaterial color={p['sky']}/></mesh>

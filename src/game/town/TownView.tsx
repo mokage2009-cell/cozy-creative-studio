@@ -200,7 +200,9 @@ export function TownView({ plots, ownerName, myName, myHair, myOutfit, onPlot }:
         {TREES.map(([x, z], i) => <Tree key={i} x={x} z={z} />)}
         {plots.map((id, i) => {
           const def = HOUSES.find((h) => h.id === id);
-          const [x, z] = PLOT_POS[i] ?? "#619989";
+          const position = PLOT_POS[i];
+          if (!position) return null;
+          const [x, z] = position;
           if (!def) {
             return (
               <mesh key={i} position={[x, 0.03, z]} receiveShadow onClick={(e) => { e.stopPropagation(); onPlot(i); }}>
