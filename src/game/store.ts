@@ -21,6 +21,11 @@ interface GameState {
   avatarSlots: AvatarSlot[];
   studioMotions: StudioMotion[];
   liveTexture: string | null;
+  sceneColors: Record<string, string>;
+  hideHud: boolean;
+  siteBackups: { avatar: AvatarConfig; sceneColors: Record<string, string>; hideHud: boolean }[];
+  applySiteEdit: (e: { avatar?: Partial<AvatarConfig> | undefined; scene?: Record<string, string | undefined> | undefined; ui?: { hideHud?: boolean | undefined } | undefined }) => void;
+  undoSiteEdit: () => boolean;
   saveAvatarSlot: (index: number) => void;
   loadAvatarSlot: (index: number) => void;
   saveStudioMotion: (motion: StudioMotion) => void;
@@ -74,6 +79,28 @@ export const useGame = create<GameState>()(
       avatarSlots: [],
       studioMotions: [],
       liveTexture: null,
+      sceneColors: {},
+      hideHud: false,
+      siteBackups: [],
+      applySiteEdit: (e) => {
+        const g = get();
+        const backup = { avatar: { ...g.avatar }, sceneColors: { ...g.sceneColors }, hideHud: g.hideHud };
+        const scene: Record<string, string> = { ...g.sceneColors };
+        for (const [k, v] of Object.entries(e.scene ?? {})) if (v) scene[k] = v;
+        set({
+          siteBackups: [...g.siteBackups, backup].slice(-10),
+          avatar: { ...g.avatar, ...(e.avatar ?? {}) },
+          sceneColors: scene,
+          hideHud: e.ui?.hideHud ?? g.hideHud,
+        });
+      },
+      undoSiteEdit: () => {
+        const list = [...get().siteBackups];
+        const last = list.pop();
+        if (!last) return false;
+        set({ ...last, siteBackups: list });
+        return true;
+      },
       saveAvatarSlot: (index) => {
         const slots = [...get().avatarSlots];
         slots[index] = { id: String(index), name: `スロット ${index + 1}`, config: { ...get().avatar } };

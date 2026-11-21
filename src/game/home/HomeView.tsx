@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Vector3, type Group } from 'three';
-import { ArrowLeft, MessageCircle, Sofa, Home, Sun, ChevronRight, Camera, RotateCcw } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Sofa, Home, Sun, ChevronRight, Camera, RotateCcw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ACTIONS, DEFAULT_AVATAR, DEFAULT_FURNITURE } from '../catalog';
 import { avatarDims, parseChat, planCommand, homePath, homeZone, STUDIO_POINT, studioEditingAllowed, walkStep, type MovePlan } from '../logic';
@@ -12,6 +12,7 @@ import { AvatarModel } from './Avatar3D';
 import { Furniture3D } from './Furniture3D';
 import { ChatPanel, InventoryPanel } from '../ui/HomePanels';
 import { StudioPanel } from '../studio/StudioPanel';
+import { SiteAiPanel, AutoRestore } from '../assistant/SiteAiPanel';
 import { RoomArchitecture, scenePalette } from './RoomArchitecture';
 
 type Cmd=AvatarCommand & {id:number};
@@ -41,15 +42,15 @@ function AvatarController({cmd,items,config,onZone,motion}: {cmd:Cmd|null;items:
 }
 export function HomeView(){
  const s=useGame();const readOnly=!!s.visiting;const items=readOnly?DEFAULT_FURNITURE:s.furniture;const avatar=readOnly?DEFAULT_AVATAR:s.avatar;
- const [cmd,setCmd]=useState<Cmd|null>(null),[zone,setZone]=useState('living'),[panel,setPanel]=useState<'chat'|'items'|null>(null),[selected,setSelected]=useState<string|null>(null),[menu,setMenu]=useState<string|null>(null),[log,setLog]=useState<{who:'me'|'avatar';text:string}[]>([]),[motion,setMotion]=useState<StudioFrame[]|null>(null),[reset,setReset]=useState(0),[ready,setReady]=useState(false);
- const colors=useMemo(scenePalette,[]);const canEdit=studioEditingAllowed(zone==='studio'?-10:0,readOnly);
+ const [cmd,setCmd]=useState<Cmd|null>(null),[zone,setZone]=useState('living'),[panel,setPanel]=useState<'chat'|'items'|'ai'|null>(null),[selected,setSelected]=useState<string|null>(null),[menu,setMenu]=useState<string|null>(null),[log,setLog]=useState<{who:'me'|'avatar';text:string}[]>([]),[motion,setMotion]=useState<StudioFrame[]|null>(null),[reset,setReset]=useState(0),[ready,setReady]=useState(false);
+ const over=useGame(x=>x.sceneColors);const colors=useMemo(()=>scenePalette(over),[over]);const canEdit=studioEditingAllowed(zone==='studio'?-10:0,readOnly);
  const run=(c:AvatarCommand)=>{setCmd({...c,id:Date.now()+Math.random()});return c.say??'了解！';};
  const goStudio=()=>{if(readOnly)return;setPanel(null);setMenu(null);run({targetPoint:STUDIO_POINT,pose:'stand'});};
  const goLiving=()=>{setMotion(null);run({targetPoint:[.5,2],pose:'stand'});};
  const floor=(e:ThreeEvent<MouseEvent>)=>{e.stopPropagation();if(e.delta>6||readOnly)return;setMenu(null);if(panel==='items'&&selected){if(e.point.z>=-5)s.moveItem(selected,e.point.x,e.point.z);return;}const z=e.point.z;if(z<-5)goStudio();else{setMotion(null);run({targetPoint:[Math.max(-5.4,Math.min(5.4,e.point.x)),Math.max(-4.4,Math.min(4.4,z))],pose:'stand'});}};
  const menuItem=items.find(i=>i.uid===menu);
  return <div className="home-screen absolute inset-0" data-scene-ready={ready||undefined} data-zone={zone}>
-  <Canvas shadows camera={{position:[12,10,14],fov:40}} dpr={[1,1.5]} onCreated={()=>setReady(true)}>
+  <AutoRestore><Canvas shadows camera={{position:[12,10,14],fov:40}} dpr={[1,1.5]} onCreated={()=>setReady(true)}>
    <color attach="background" args={[colors['floor']]}/><ambientLight intensity={.8}/><hemisphereLight args={[colors['light'],colors['sage'],1]}/>
    <directionalLight castShadow position={[-4,9,3]} intensity={2} color={colors['light']} shadow-mapSize={[1024,1024]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={16} shadow-camera-bottom={-16} shadow-normalBias={.04}/>
    <Environment resolution={32}><Lightformer intensity={1.5} position={[0,6,0]} scale={[12,12,1]}/></Environment>
@@ -58,16 +59,17 @@ export function HomeView(){
    {menuItem&&<Html position={[menuItem.x,1.7,menuItem.z]} center zIndexRange={[25,0]}><div className="panel p-2 flex gap-2">{ACTIONS[menuItem.type].map(a=><Button key={a.id} size="sm" onClick={()=>{setMenu(null);run({targetUid:menuItem.uid,pose:a.pose,say:a.label});}}>{a.label}</Button>)}</div></Html>}
    <AvatarController cmd={cmd} items={items} config={avatar} motion={canEdit?motion:null} onZone={z=>{setZone(homeZone(z));if(z<-8)setPanel(null);}}/>
    <CameraRig zone={zone} reset={reset}/>
-  </Canvas>
-  <header className="home-heading"><div className="home-emblem"><Home size={21}/></div><div><span className="eyebrow">POCKET TOWN</span><h1>わたしの自宅</h1></div><div className="home-breadcrumb"><span>HOME</span><ChevronRight size={13}/><span>{zone==='studio'?'クリエイティブ・スタジオ':'リビング'}</span></div></header>
-  <div className="room-status"><Sun size={17}/><span>心地よい昼下がり</span><span className="status-dot"/></div>
+  </Canvas></AutoRestore>
+  {!s.hideHud&&<><header className="home-heading"><div className="home-emblem"><Home size={21}/></div><div><span className="eyebrow">POCKET TOWN</span><h1>わたしの自宅</h1></div><div className="home-breadcrumb"><span>HOME</span><ChevronRight size={13}/><span>{zone==='studio'?'クリエイティブ・スタジオ':'リビング'}</span></div></header>
+  <div className="room-status"><Sun size={17}/><span>心地よい昼下がり</span><span className="status-dot"/></div></>}
   <div className="view-tools"><Button variant="tool" size="icon" title="視点を戻す" aria-label="視点を戻す" onClick={()=>setReset(r=>r+1)}><RotateCcw/></Button><Button variant="tool" size="icon" title="写真を保存" aria-label="写真を保存" onClick={()=>s.notify('写真は端末のスクリーンショットで保存できます')}><Camera/></Button></div>
   {readOnly&&<div className="visit-banner">{s.visiting?.ownerName}さんの家 · 閲覧専用</div>}
   {canEdit&&<StudioPanel onMotion={setMotion} onReturn={goLiving}/>}
   {zone!=='studio'&&<div className="home-bottom">
    {panel==='chat'&&<ChatPanel log={log} onClose={()=>setPanel(null)} onSend={t=>{const c=parseChat(t,items);const say=run(c);setLog(l=>[...l,{who:'me',text:t},{who:'avatar',text:say}]);}}/>}
+   {panel==='ai'&&<SiteAiPanel onClose={()=>setPanel(null)}/>}
    {panel==='items'&&<InventoryPanel selected={selected} onSelect={setSelected} onClose={()=>{setPanel(null);setSelected(null);}}/>}
-   <nav className="home-dock" aria-label="自宅の操作"><Button variant="dock" onClick={s.exitHome}><ArrowLeft/><span>街へ戻る</span></Button><div className="dock-divider"/>{!readOnly&&<><Button variant="dock" aria-pressed={panel==='chat'} onClick={()=>setPanel(panel==='chat'?null:'chat')}><MessageCircle/><span>チャット</span></Button><Button variant="dock" aria-pressed={panel==='items'} onClick={()=>setPanel(panel==='items'?null:'items')}><Sofa/><span>家具配置</span></Button></>}</nav>
+   <nav className="home-dock" aria-label="自宅の操作"><Button variant="dock" onClick={s.exitHome}><ArrowLeft/><span>街へ戻る</span></Button><div className="dock-divider"/>{!readOnly&&<><Button variant="dock" aria-pressed={panel==='chat'} onClick={()=>setPanel(panel==='chat'?null:'chat')}><MessageCircle/><span>チャット</span></Button><Button variant="dock" aria-pressed={panel==='items'} onClick={()=>setPanel(panel==='items'?null:'items')}><Sofa/><span>家具配置</span></Button><Button variant="dock" aria-pressed={panel==='ai'} onClick={()=>setPanel(panel==='ai'?null:'ai')}><Sparkles/><span>AI修正</span></Button></>}</nav>
   </div>}
  </div>;
 }

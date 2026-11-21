@@ -4,11 +4,12 @@ import { Html, MeshReflectorMaterial, RoundedBox } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
+import { useGame } from '../store';
 
 type SceneColor = 'wall'|'trim'|'wood'|'wood-line'|'sage'|'rose'|'sky'|'light'|'ink'|'floor'|'rug';
-export function scenePalette(): Record<SceneColor, string> {
+export function scenePalette(over: Record<string,string> = {}): Record<SceneColor, string> {
  const css = getComputedStyle(document.documentElement);
-  const color = (key: SceneColor) => css.getPropertyValue(`--scene-${key}`).trim();
+  const color = (key: SceneColor) => over[key] ?? css.getPropertyValue(`--scene-${key}`).trim();
   return {wall:color('wall'),trim:color('trim'),wood:color('wood'),'wood-line':color('wood-line'),sage:color('sage'),rose:color('rose'),sky:color('sky'),light:color('light'),ink:color('ink'),floor:color('floor'),rug:color('rug')};
 }
 const FLOOR_SECTIONS: [number,number,number,number][] = [[0,0,12,10],[0,-6.5,2,3],[0,-11,8,6]];
@@ -16,7 +17,8 @@ function Block({position,size,color}: {position:[number,number,number];size:[num
  return <RoundedBox position={position} args={size} radius={0.025} smoothness={2} castShadow receiveShadow><meshToonMaterial color={color}/></RoundedBox>;
 }
 export function RoomArchitecture({onFloor,onStudio,onLiving,studioActive}: {onFloor:(e:ThreeEvent<MouseEvent>)=>void;onStudio:()=>void;onLiving:()=>void;studioActive:boolean}) {
- const p = useMemo(scenePalette,[]);
+ const over = useGame(s=>s.sceneColors);
+ const p = useMemo(()=>scenePalette(over),[over]);
  const wood = useMemo(()=>{
   const c=document.createElement('canvas');c.width=512;c.height=512;const g=c.getContext('2d');if(!g)return null;
   g.fillStyle=p['wood'];g.fillRect(0,0,512,512);g.strokeStyle=p['wood-line'];g.lineWidth=2;
