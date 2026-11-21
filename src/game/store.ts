@@ -24,7 +24,7 @@ interface GameState {
   sceneColors: Record<string, string>;
   hideHud: boolean;
   siteBackups: { avatar: AvatarConfig; sceneColors: Record<string, string>; hideHud: boolean }[];
-  applySiteEdit: (e: { avatar?: Partial<AvatarConfig> | undefined; scene?: Record<string, string | undefined> | undefined; ui?: { hideHud?: boolean | undefined } | undefined }) => void;
+  applySiteEdit: (e: { avatar?: { [K in keyof AvatarConfig]?: AvatarConfig[K] | undefined } | undefined; scene?: Record<string, string | undefined> | undefined; ui?: { hideHud?: boolean | undefined } | undefined }) => void;
   undoSiteEdit: () => boolean;
   saveAvatarSlot: (index: number) => void;
   loadAvatarSlot: (index: number) => void;
@@ -89,7 +89,7 @@ export const useGame = create<GameState>()(
         for (const [k, v] of Object.entries(e.scene ?? {})) if (v) scene[k] = v;
         set({
           siteBackups: [...g.siteBackups, backup].slice(-10),
-          avatar: { ...g.avatar, ...(e.avatar ?? {}) },
+          avatar: { ...g.avatar, ...Object.fromEntries(Object.entries(e.avatar ?? {}).filter(([, v]) => v !== undefined)) } as AvatarConfig,
           sceneColors: scene,
           hideHud: e.ui?.hideHud ?? g.hideHud,
         });
