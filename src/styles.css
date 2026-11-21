@@ -178,10 +178,10 @@
 .door-label {font-size:9px;font-weight:700;letter-spacing:0;border-radius:6px;padding:7px 10px;height:29px;}
 .door-label svg {width:12px;height:12px;}
 .visit-banner {position:absolute;top:100px;left:30px;font-size:12px;}
-.studio-editor {position:absolute;right:24px;top:105px;width:360px;max-height:calc(100dvh - 215px);background:var(--card);border:1px solid var(--border);box-shadow:var(--dock-shadow);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;z-index:25;}
-.studio-title {padding:17px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.studio-editor {position:absolute;left:50%;transform:translateX(-50%);bottom:16px;width:min(960px,calc(100% - 32px));max-height:34dvh;background:var(--card);border:1px solid var(--border);box-shadow:var(--dock-shadow);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;z-index:25;}
+.studio-title {padding:8px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
 .studio-title h2 {font-size:15px;font-weight:700;margin-top:3px;}
-.studio-tabs {padding:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;border-bottom:1px solid var(--border);}
+.studio-tabs {padding:8px 10px;display:grid;grid-template-columns:repeat(2,1fr);gap:5px;border-bottom:1px solid var(--border);}
 .studio-tabs button {font-size:11px;padding:0 4px;box-shadow:none;gap:5px;}
 .studio-tabs button[aria-selected=true] {background:var(--primary);color:var(--primary-foreground);border-color:var(--primary);}
 .studio-body {padding:14px;overflow:auto;}
@@ -209,6 +209,6 @@
  .room-status {right:20px;top:32px;font-size:10px;gap:5px;}.room-status .status-dot {display:none;}.room-status svg {width:14px;}
  .home-bottom {bottom:calc(20px + env(safe-area-inset-bottom));max-width:calc(100% - 28px);width:350px;}.home-dock {padding:6px;gap:3px;justify-content:space-between;}.dock-button {font-size:11px;padding:0 11px;gap:7px;height:46px;}.dock-button svg {width:17px;height:17px;}
  .view-tools {bottom:100px;right:18px;}.view-tools button {height:32px;width:32px;}.home-bottom>.panel {width:100%;}
- .studio-editor {right:14px;left:14px;top:auto;bottom:102px;width:auto;max-height:43dvh;}.studio-title {padding:10px 13px;}.studio-title h2 {font-size:13px;}.studio-tabs {padding:7px;}.studio-body {padding:10px 13px;}
+ .studio-editor {bottom:calc(10px + env(safe-area-inset-bottom));width:calc(100% - 20px);max-height:38dvh;}.studio-title {padding:10px 13px;}.studio-title h2 {font-size:13px;}.studio-tabs {padding:7px;}.studio-body {padding:10px 13px;}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}

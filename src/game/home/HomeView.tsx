@@ -16,18 +16,16 @@ import { RoomArchitecture, scenePalette } from './RoomArchitecture';
 
 type Cmd=AvatarCommand & {id:number};
 function CameraRig({zone,reset}: {zone:string;reset:number}) {
- const controls=useRef<React.ComponentRef<typeof OrbitControls>>(null);const {camera,size}=useThree();const moving=useRef(true);
- useEffect(()=>{moving.current=true;},[zone,reset,size.width]);
+ const controls=useRef<React.ComponentRef<typeof OrbitControls>>(null);const {camera,size}=useThree();const moving=useRef(true);const studio=zone==='studio';
+ useEffect(()=>{moving.current=true;if(studio&&controls.current){const mobile=size.width<600;const target=new Vector3(STUDIO_POINT[0],mobile?.2:.45,STUDIO_POINT[1]);camera.position.set(STUDIO_POINT[0]+(mobile?7:5.2),1.1,STUDIO_POINT[1]);controls.current.target.copy(target);controls.current.update();moving.current=false;}},[zone,reset,size.width,studio,camera]);
  useFrame((_,delta)=>{
-  if(!moving.current||!controls.current)return;
-  const studio=zone==='studio',mobile=size.width<600;
-   const pos=new Vector3(studio?5.6:12,studio?1.5:10,studio?-10:14);
-   const target=new Vector3(studio?(mobile?0:-1.6):-.4,studio?.85:0,studio?-10:-1.8);
-   if(mobile)pos.sub(target).multiplyScalar(studio?1.25:1.3).add(target);
-   const alpha=1-Math.exp(-3*Math.min(delta,.05));camera.position.lerp(pos,alpha);controls.current.target.lerp(target,alpha);controls.current.update();
+  if(!moving.current||!controls.current||studio)return;
+  const mobile=size.width<600;const pos=new Vector3(12,10,14);const target=new Vector3(-.4,0,-1.8);
+  if(mobile)pos.sub(target).multiplyScalar(1.3).add(target);
+  const alpha=1-Math.exp(-3*Math.min(delta,.05));camera.position.lerp(pos,alpha);controls.current.target.lerp(target,alpha);controls.current.update();
   if(camera.position.distanceTo(pos)<.03)moving.current=false;
  });
- return <OrbitControls ref={controls} enablePan={false} minDistance={4} maxDistance={35} maxPolarAngle={1.4} onStart={()=>{moving.current=false;}}/>;
+ return <OrbitControls ref={controls} enablePan={false} minDistance={studio?2.5:4} maxDistance={studio?10:35} maxPolarAngle={studio?1.55:1.4} onStart={()=>{moving.current=false;}}/>;
 }
 function AvatarController({cmd,items,config,onZone,motion}: {cmd:Cmd|null;items:FurnitureItem[];config:AvatarConfig;onZone:(z:number)=>void;motion:StudioFrame[]|null}) {
  const g=useRef<Group>(null);const plan=useRef<MovePlan|null>(null);const path=useRef<[number,number][]>([]);const zone=useRef('living');const [pose,setPose]=useState<Pose>('stand');const dims=useMemo(()=>avatarDims(config),[config]);
@@ -66,10 +64,10 @@ export function HomeView(){
   <div className="view-tools"><Button variant="tool" size="icon" title="視点を戻す" aria-label="視点を戻す" onClick={()=>setReset(r=>r+1)}><RotateCcw/></Button><Button variant="tool" size="icon" title="写真を保存" aria-label="写真を保存" onClick={()=>s.notify('写真は端末のスクリーンショットで保存できます')}><Camera/></Button></div>
   {readOnly&&<div className="visit-banner">{s.visiting?.ownerName}さんの家 · 閲覧専用</div>}
   {canEdit&&<StudioPanel onMotion={setMotion} onReturn={goLiving}/>}
-  <div className="home-bottom">
+  {zone!=='studio'&&<div className="home-bottom">
    {panel==='chat'&&<ChatPanel log={log} onClose={()=>setPanel(null)} onSend={t=>{const c=parseChat(t,items);const say=run(c);setLog(l=>[...l,{who:'me',text:t},{who:'avatar',text:say}]);}}/>}
    {panel==='items'&&<InventoryPanel selected={selected} onSelect={setSelected} onClose={()=>{setPanel(null);setSelected(null);}}/>}
    <nav className="home-dock" aria-label="自宅の操作"><Button variant="dock" onClick={s.exitHome}><ArrowLeft/><span>街へ戻る</span></Button><div className="dock-divider"/>{!readOnly&&<><Button variant="dock" aria-pressed={panel==='chat'} onClick={()=>setPanel(panel==='chat'?null:'chat')}><MessageCircle/><span>チャット</span></Button><Button variant="dock" aria-pressed={panel==='items'} onClick={()=>setPanel(panel==='items'?null:'items')}><Sofa/><span>家具配置</span></Button></>}</nav>
-  </div>
+  </div>}
  </div>;
 }
